@@ -45,6 +45,7 @@ div.c1 {text-align: center}
                     echo "<a href=\"medals.php\">".UPDATE_T_10."</a>";
                     echo "<a href=\"sysmsg.php\">".SYSTEM_MESSAGE."</a>";
 					echo "<a href=\"create_account.php\">".CREATE_NAT."</a>";
+					echo "<a href=\"oasis_populate.php\"><font color=\"blue\">Populate Oasis</font></a>";
                     } ?> <a href="logout.php"><?php echo LOGOUT; ?></a></p>
 
 		<a href="rules.php"><b><?php echo GAME_RULES; ?></b></a> 
