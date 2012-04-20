@@ -19,7 +19,7 @@ $arrayVillage = $village->resarray;
 for($i=1;$i<=18;$i++) {echo "	<area href=\"build.php?id=$i\" coords=\"$coorarray[$i]\" shape=\"circle\" title=\"".$building->procResType($arrayVillage['f'.$i.'t'])."&nbsp;".$arrayVillage['f'.$i].$lang['fields'][0]."\"/>\r\n";
 }
 ?>
-	<area href="dorf2.php" coords="144,131,36" shape="circle" title="<?php echo $lang['header'][1]; ?>" alt="" />
+	<area href="dorf2.php" coords="144,131,36" shape="circle" title="Village centre" alt="" />
 </map>
 
 <div id="village_map" class="f<?php echo $village->type; ?>">

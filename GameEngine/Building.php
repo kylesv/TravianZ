@@ -11,6 +11,7 @@
 #################################################################################
 include ("./GameEngine/Lang/".LANG.".php");
 
+
 class Building {	
 
 	public $NewBuilding = false;

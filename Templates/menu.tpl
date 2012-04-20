@@ -86,7 +86,6 @@ div.c1 {text-align: center}
 	include("Templates/serv_time.tpl"); 
     ?>
 
-
     <div id="ce"></div><?php
     die();
     }
