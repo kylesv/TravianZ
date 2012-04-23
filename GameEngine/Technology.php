@@ -12,8 +12,8 @@
 
 class Technology {
 	
-	private $unarray = array(1=>U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,U13,U14,U15,U16,U17,U18,U19,U20,U21,U22,U23,U24,U25,U26,U27,U28,U29,U30,U31,U32,U33,U34,U35,U36,U37,U38,U39,U40,U41,U42,U43,U44,U45,U46,U47,U48,U49,U50,U0);
-    
+    public $unarray = array(1=>U1,U2,U3,U4,U5,U6,U7,U8,U9,U10,U11,U12,U13,U14,U15,U16,U17,U18,U19,U20,U21,U22,U23,U24,U25,U26,U27,U28,U29,U30,U31,U32,U33,U34,U35,U36,U37,U38,U39,U40,U41,U42,U43,U44,U45,U46,U47,U48,U49,U50,U0);
+
 	public function grabAcademyRes() {
 		global $village;
 		$holder = array();
@@ -169,7 +169,11 @@ class Technology {
 		$woodcalc = floor($res['wood'] / ($unitarray['wood'] * ($great?3:1)));
 		$claycalc = floor($res['clay'] / ($unitarray['clay'] * ($great?3:1)));
 		$ironcalc = floor($res['iron'] / ($unitarray['iron'] * ($great?3:1)));
+		if($res['crop']>0){
 		$cropcalc = floor($res['crop'] / ($unitarray['crop'] * ($great?3:1)));
+		}else{
+		$cropcalc = 0;
+		}
 		$popcalc = floor($village->getProd("crop")/$unitarray['pop']);
 		return min($woodcalc,$claycalc,$ironcalc,$cropcalc);
 	}

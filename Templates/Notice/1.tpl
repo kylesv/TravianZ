@@ -31,7 +31,8 @@ if(isset($dataarray[147]) and $dataarray[147] != 0){$colspan="11";}else{$colspan
 <tr>
 <td>&nbsp;</td>
 <?php
-$start = $dataarray[2] == 1? 1 : (($dataarray[2] == 2)? 11 : (($dataarray[2] == 3)? 21 : 31));
+$tribe = $dataarray[2];
+$start = ($tribe-1)*10+1;
 for($i=$start;$i<=($start+9);$i++) {
 	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
 }
@@ -217,8 +218,8 @@ for($i=87;$i<=96;$i++) {
 ?>
 </tr></tbody></table>
 
-<?php } ?>
-<?php  if ($dataarray[97]=='1'){ 
+<?php }
+if ($dataarray[97]=='1'){ 
 $start=31; ?>	
 	<table cellpadding="1" cellspacing="1" class="defender">
 	<thead>

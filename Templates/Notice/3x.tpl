@@ -8,7 +8,7 @@ $topic = $database->getNotice2($_GET['id'], 'topic');
 $time = $database->getNotice2($_GET['id'], 'time');
 $data = $database->getNotice2($_GET['id'], 'data');
 $dataarray = explode(",",$data);
-if($dataarray[147]!='' or $dataarray!=0){$colspan="11";}else{$colspan="10";}
+if($dataarray[151]!='' or $dataarray!=0){$colspan="11";}else{$colspan="10";}
 ?>
 <table cellpadding="1" cellspacing="1" id="report_surround">
 			<thead>
@@ -37,11 +37,12 @@ if($dataarray[147]!='' or $dataarray!=0){$colspan="11";}else{$colspan="10";}
 <tr>
 <td>&nbsp;</td>
 <?php
-$start = $dataarray[2] == 1? 1 : (($dataarray[2] == 2)? 11 : (($dataarray[2] == 3)? 21 : 31));
+$tribe = $dataarray[2];
+$start = ($tribe-1)*10+1;
 for($i=$start;$i<=($start+9);$i++) {
 	echo "<td><img src=\"img/x.gif\" class=\"unit u$i\" title=\"".$technology->getUnitName($i)."\" alt=\"".$technology->getUnitName($i)."\" /></td>";
 }
-if ($dataarray[147]!="" or $dataarray[147]!=0){
+if ($dataarray[151]!="" or $dataarray[151]!=0){
 	echo "<td><img src=\"img/x.gif\" class=\"unit uhero\" title=\"Hero\" alt=\"Hero\" /></td>";
 }
 echo "</tr><tr><th>Troops</th>";
@@ -53,8 +54,8 @@ for($i=3;$i<=12;$i++) {
     	echo "<td>".$dataarray[$i]."</td>";
     }
 }
-if ($dataarray[147]!="" or $dataarray[147]!=0){
-	echo "<td>$dataarray[147]</td>";
+if ($dataarray[151]!="" or $dataarray[151]!=0){
+	echo "<td>$dataarray[151]</td>";
 }
 echo "<tr><th>Casualties</th>";
 for($i=13;$i<=22;$i++) {
@@ -65,9 +66,9 @@ for($i=13;$i<=22;$i++) {
     	echo "<td>".$dataarray[$i]."</td>";
     }
 }
-if ($dataarray[147]!="" or $dataarray[147]!=0){
-	if ($dataarray[148]==0){$tdclass='class="none"';}
-	echo "<td $tdclass>$dataarray[148]</td>";
+if ($dataarray[151]!="" or $dataarray[151]!=0){
+	if ($dataarray[152]==0){$tdclass='class="none"';}
+	echo "<td $tdclass>$dataarray[152]</td>";
 }
 echo "</tr></tbody>"; ?>
 </td></tr></tbody></table>

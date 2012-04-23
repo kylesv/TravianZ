@@ -1082,6 +1082,18 @@ ${dead.$i}=$data['t'.$i];
 						$life1 = $enforce['u'.$start.'']+$enforce['u'.($start+1).'']+$enforce['u'.($start+2).'']+$enforce['u'.($start+3).'']+$enforce['u'.($start+4).'']+$enforce['u'.($start+5).'']+$enforce['u'.($start+6).'']+$enforce['u'.($start+7).'']+$enforce['u'.($start+8).'']+$enforce['u'.($start+9).''];
                         //NEED TO SEND A RAPPORTAGE!!!
                         $data2 = ''.$database->getVillageField($enforce['from'],"owner").','.$to['wref'].','.addslashes($to['name']).','.$tribe.','.$life.','.$notlife.'';
+						if($scout){
+						for($i=1;$i<=10;$i++)
+						{
+						if($battlepart['casualties_attacker'][$i]){
+						if($unitsdead_att == $unitssend_att){
+                        $database->addNotice($database->getVillageField($enforce['from'],"owner"),$from['wref'],$ownally,15,'Reinforcement in '.addslashes($to['name']).' was attacked',$data2,$AttackArrivalTime);
+						}else{
+						$database->addNotice($database->getVillageField($enforce['from'],"owner"),$from['wref'],$ownally,16,'Reinforcement in '.addslashes($to['name']).' was attacked',$data2,$AttackArrivalTime);
+						}
+						}
+						}
+						}else{
 						if($notlife == 0){
                         $database->addNotice($database->getVillageField($enforce['from'],"owner"),$from['wref'],$ownally,15,'Reinforcement in '.addslashes($to['name']).' was attacked',$data2,$AttackArrivalTime);
 						}else if($life1 > $notlife1){
@@ -1091,6 +1103,7 @@ ${dead.$i}=$data['t'.$i];
 						}
                         //delete reinf sting when its killed all.
                         if($wrong=='0'){ $database->deleteReinf($enforce['id']); }
+						}
                 }
             }
                 $unitsdead_def[1] = ''.$dead['1'].','.$dead['2'].','.$dead['3'].','.$dead['4'].','.$dead['5'].','.$dead['6'].','.$dead['7'].','.$dead['8'].','.$dead['9'].','.$dead['10'].'';
@@ -1465,6 +1478,7 @@ ${dead.$i}=$data['t'.$i];
                                 $database->query($q);
                                 $q = "UPDATE ".TB_PREFIX."wdata set occupied = 0 where id = ".$data['to'];
                                 $database->query($q);
+								$database->clearExpansionSlot($data['to']);
                                 $logging->VillageDestroyCatalog($data['to']);
                         }
                     }
@@ -1838,7 +1852,7 @@ ${dead.$i}=$data['t'.$i];
                     }
                     //loyalty is more than 0
                     if(($toF['loyalty']-$rand)>0){
-                        $info_chief = "".$chief_pic.",The loyalty was lowered from <b>".$toF['loyalty']."</b> to <b>".($toF['loyalty']-$rand)."</b>.";
+                        $info_chief = "".$chief_pic.",The loyalty was lowered from <b>".floor($toF['loyalty'])."</b> to <b>".floor($toF['loyalty']-$rand)."</b>.";
                         $database->setVillageField($data['to'],loyalty,($toF['loyalty']-$rand));
                     } else {
                     //you took over the village
@@ -1847,8 +1861,28 @@ ${dead.$i}=$data['t'.$i];
                         if ($artifact['vref'] == $data['to']){
                          $database->claimArtefact($data['to'],$data['to'],$database->getVillageField($data['from'],"owner"));
                         }
-                        $database->setVillageField($data['to'],loyalty,33);
+                        $database->setVillageField($data['to'],loyalty,100);
                         $database->setVillageField($data['to'],owner,$database->getVillageField($data['from'],"owner"));
+						//delete upgrades in armory and blacksmith
+						$q = "DELETE FROM ".TB_PREFIX."abdata WHERE vref=".$data['to'];
+                        $database->query($q);
+						$database->addABTech($data['to']);
+						//delete researches in academy
+						$q = "DELETE FROM ".TB_PREFIX."tdata WHERE vref=".$data['to'];
+                        $database->query($q);
+						$database->addTech($data['to']);
+						$pop1 = $database->getVillageField($data['from'],"pop");
+						$pop2 = $database->getVillageField($data['to'],"pop");
+						if($pop1 > $pop2){
+						$buildlevel = $database->getResourceLevel($data['to']);
+						for ($i=0; $i<=99; $i++){
+						if($buildlevel['f'.$i]!=0){
+						$buildlevel2 = $buildlevel['f'.$i];
+						$q = "UPDATE ".TB_PREFIX."fdata SET `".$buildlevel2."`='".$buildlevel2."' - 1 WHERE vref=".$data['to'];
+                        $database->query($q);
+						}
+						}
+						}
                         //destroy wall
                         $database->setVillageLevel($data['to'],"f40",0);
                         $database->setVillageLevel($data['to'],"f40t",0);
@@ -2073,8 +2107,16 @@ $crannyimg = "<img src=\"gpack/travian_default/img/g/g23.gif\" height=\"30\" wid
             @fclose($ourFileHandle);
         $q = "SELECT * FROM ".TB_PREFIX."movement, ".TB_PREFIX."attacks where ".TB_PREFIX."movement.ref = ".TB_PREFIX."attacks.id and ".TB_PREFIX."movement.proc = '0' and ".TB_PREFIX."movement.sort_type = '3' and ".TB_PREFIX."attacks.attack_type = '2' and endtime < $time";
         $dataarray = $database->query_return($q);
-
         foreach($dataarray as $data) {
+		if($data['from']==0){
+		$to = $database->getMInfo($data['to']);
+		$database->addEnforce($data);
+		$reinf = $database->getEnforce($data['to'],$data['from']);
+		$database->modifyEnforce($reinf['id'],31,1,1);
+		$data_fail = '0,0,4,1,0,0,0,0,0,0,0,0,0,0';
+		$database->addNotice($to['owner'],$to['wref'],$targetally,8,'village of the elders reinforcement '.addslashes($to['name']).'',$data_fail,$AttackArrivalTime);
+        $database->setMovementProc($data['moveid']);
+		}else{
             //set base things
             $owntribe = $database->getUserField($database->getVillageField($data['from'],"owner"),"tribe",0);
             $targettribe = $database->getUserField($database->getVillageField($data['to'],"owner"),"tribe",0);
@@ -2120,7 +2162,7 @@ $crannyimg = "<img src=\"gpack/travian_default/img/g/g23.gif\" height=\"30\" wid
 			}
             //update status
             $database->setMovementProc($data['moveid']);
-
+			}
         }
 		if(file_exists("GameEngine/Prevention/sendreinfunits.txt")) {
                 @unlink("GameEngine/Prevention/sendreinfunits.txt");
