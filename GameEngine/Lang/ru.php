@@ -443,7 +443,7 @@ define("MASS_SENT","Mass IGM was sent");
 							9 => '&nbsp;в&nbsp;&nbsp;',
 							10 => 'Улучшить до уровня&nbsp;',
 							11 => 'сегодня',
-							12 => 'завтра');
+							12 => 'вчера');
 		
 		$lang['movement'] = array (
 							0 => 'в&nbsp;');
