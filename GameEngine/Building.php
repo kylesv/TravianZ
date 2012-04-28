@@ -103,7 +103,7 @@ class Building {
 									return 8;
 								}
 								else {
-									if($session->plus) {
+									if($session->plus or $tid==40) {
 										if($this->plus == 0) {
 											return 9;
 										}
@@ -121,7 +121,7 @@ class Building {
 									return 8;
 								}
 								else {
-									if($session->plus) {
+									if($session->plus or $tid==40) {
 										if($this->plus == 0) {
 											return 9;
 										}
@@ -137,7 +137,7 @@ class Building {
 						}
 						else {
 							if($this->basic == 1) {
-								if($session->plus && $this->plus == 0) {
+								if(($session->plus or $tid==40) && $this->plus == 0) {
 									return 9;
 								}
 								else {
@@ -330,7 +330,7 @@ class Building {
 			$time = time() + round($dataarray[$village->resarray['f'.$id]-1]['time'] / 4);
 			$loop = 0;
 			if($this->inner == 1 || $this->basic == 1) {
-				if($session->plus && $this->plus == 0) {
+				if(($session->plus or $village->resarray['f'.$id.'t']==40)&& $this->plus == 0) {
 					$loop = 1;
 				}
 			}
@@ -620,11 +620,19 @@ class Building {
 	}
 	
 	private function finishAll() {
-		global $database,$session,$logging,$village,$bid18,$bid10,$bid11,$technology;
+		global $database,$session,$logging,$village,$bid18,$bid10,$bid11,$technology,$_SESSION;
+		if($session->access!=BANNED){
+		if($session->gold >= 2){
 		foreach($this->buildArray as $jobs) {
+		if($jobs['wid']==$village->wid){
+		$wwvillage = $database->getResourceLevel($jobs['wid']);
+		if($wwvillage['f99t']!=40){
 			$level = $database->getFieldLevel($jobs['wid'],$jobs['field']);
 			$level = ($level == -1) ? 0 : $level;
 			if($jobs['type'] != 25 AND $jobs['type'] != 26 AND $jobs['type'] != 40) {
+			$gold=$database->getUserField($_SESSION['username'],'gold','username');
+			$gold-=2;
+			$database->updateUserField($_SESSION['username'],'gold',$gold,0);
 				$resource = $this->resourceRequired($jobs['field'],$jobs['type']);
 				$q = "UPDATE ".TB_PREFIX."fdata set f".$jobs['field']." = f".$jobs['field']." + 1, f".$jobs['field']."t = ".$jobs['type']." where vref = ".$jobs['wid'];
 			  	if($database->query($q)) {
@@ -671,6 +679,8 @@ class Building {
 				if(($jobs['field'] >= 19 && ($session->tribe == 1 || ALLOW_ALL_TRIBE)) || (!ALLOW_ALL_TRIBE && $session->tribe != 1)) { $innertimestamp = $jobs['timestamp']; }
 			}
 		}
+		}
+		}
 		$technology->finishTech();
 		$logging->goldFinLog($village->wid);
 		$database->modifyGold($session->uid,0,0);
@@ -682,6 +692,10 @@ class Building {
 			}
 		}
 		header("Location: ".$session->referrer);
+		}
+		}else{
+		header("Location: banned.php");
+		}
 	}
 	
 	public function resourceRequired($id,$tid,$plus=1) {
