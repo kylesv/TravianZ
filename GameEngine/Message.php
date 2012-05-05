@@ -13,7 +13,7 @@
 
         	public $unread, $nunread = false;
         	public $note;
-        	public $inbox, $sent, $reading, $reply, $archived, $noticearray, $readingNotice = array();
+        	public $inbox, $sent, $reading, $reply, $archived, $noticearray, $delnoticearray, $readingNotice = array();
         	private $totalMessage, $totalNotice;
         	private $allNotice = array();
 
@@ -112,6 +112,7 @@
         			}
 					if (!is_array($type)) { $type = array($type); }
 					$this->noticearray = $this->filter_by_value($database->getNotice($session->uid), "ntype", $type);
+					$this->delnoticearray = $this->filter_by_value($database->getDelNotice($session->uid), "ntype", $type);
         		}
         		if(isset($get['id'])) {
         			$this->readingNotice = $this->getReadNotice($get['id']);
@@ -214,6 +215,7 @@
         		global $database, $session;
         		$this->allNotice = $database->getNotice($session->uid);
         		$this->noticearray = $this->filter_by_value_except($this->allNotice, "ntype", 9);
+				$this->delnoticearray = $this->filter_by_value_except($database->getDelNotice($session->uid), "ntype", 9);
         		$this->totalNotice = count($this->allNotice);
         	}
 
@@ -370,7 +372,7 @@
         		$welcomemsg = preg_replace("'%TIME%'", date("H:i", COMMENCE), $welcomemsg);
         		$welcomemsg = preg_replace("'%PLAYERS%'", $database->countUser(), $welcomemsg);
         		$welcomemsg = preg_replace("'%ALLI%'", $database->countAlli(), $welcomemsg);
-        		return $database->sendMessage($uid, 0, WEL_TOPIC, $welcomemsg, 0);
+        		return $database->sendMessage($uid, 5, WEL_TOPIC, $welcomemsg, 0);
         	}
 
         	private function wordCensor($text) {
