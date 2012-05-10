@@ -19,8 +19,8 @@ class Automation {
     private $bountyOpop = 1;
 
 		public function isWinner() { 
-		global $database, $technology; 
-		$q = mysql_query("SELECT vref FROM ".TB_PREFIX."fdata WHERE f99 = '100'"); 
+		for ($i = 1; $i <= 40; $i++) {
+		$q = mysql_query("SELECT vref FROM ".TB_PREFIX."fdata WHERE f99 = '100' and f99t = '40' or f".$i." = '100' and f".$i."t = '40'"); 
 		$isThere = mysql_num_rows($q); 
 		if($isThere > 0) 
 		{ 
@@ -28,6 +28,21 @@ class Automation {
 		}else{ 
         ## there is no winner 
 		} 
+		}
+	}
+	
+		private function getWWRankInfo() { 
+		global $database;
+		for ($i = 1; $i <= 40; $i++) {
+		$q = mysql_query("SELECT * FROM ".TB_PREFIX."fdata WHERE f99t = '40' or f".$i."t = '40'");
+		$ww = mysql_fetch_array($q);
+		if($ww['f99'] > 0){
+		$i = 99;
+		}
+		if(mysql_num_rows($q) > 0){
+		$database->setVillageLevel($ww['vref'], "wwlevel", $ww['f'.$i]);
+		}
+		}
 	}
 	
         public function procResType($ref) {
@@ -165,6 +180,7 @@ class Automation {
             $this->demolitionComplete(); 
         } 
         $this->updateStore();
+		$this->getWWRankInfo();
     }
 
    function activeCropDead(){

@@ -1075,7 +1075,7 @@
             References: 
             *****************************************/
             function createAlliance($tag, $name, $uid, $max) {
-                $q = "INSERT into " . TB_PREFIX . "alidata values (0,'$name','$tag',$uid,0,0,0,'','',$max,'','','','','','','','')";
+                $q = "INSERT into " . TB_PREFIX . "alidata values (0,'$name','$tag',$uid,0,0,0,'','',$max,'','','','','','','','','')";
                 mysql_query($q, $this->connection);
                 return mysql_insert_id($this->connection);
             }
@@ -1285,6 +1285,11 @@
                 return mysql_query($q, $this->connection);
             }
 
+            function setAlliForumLink($aid, $link) {
+                $q = "UPDATE " . TB_PREFIX . "alidata SET `forumlink` = '$link' WHERE id = $aid";
+                return mysql_query($q, $this->connection);
+            }
+			
             function getUserAlliance($id) {
                 $q = "SELECT " . TB_PREFIX . "alidata.tag from " . TB_PREFIX . "users join " . TB_PREFIX . "alidata where " . TB_PREFIX . "users.alliance = " . TB_PREFIX . "alidata.id and " . TB_PREFIX . "users.id = $id";
                 $result = mysql_query($q, $this->connection);
@@ -1485,7 +1490,7 @@
             }
 
             function removeNotice($id) {
-                $q = "UPDATE " . TB_PREFIX . "ndata set del = 1 where id = $id";
+                $q = "UPDATE " . TB_PREFIX . "ndata set del = 1,viewed = 1 where id = $id";
                 return mysql_query($q, $this->connection);
             }
 
@@ -1862,7 +1867,13 @@
                 $result = mysql_query($q, $this->connection);
                 return $this->mysql_fetch_all($result);
             }
-
+			
+			function getUserByTribe($tribe){
+			    $q = "SELECT * FROM " . TB_PREFIX . "users where tribe = $tribe";
+                $result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
+			}
+			
             function getHeroRanking() {
                 $q = "SELECT * FROM " . TB_PREFIX . "hero WHERE dead = 0";
                 $result = mysql_query($q, $this->connection);
@@ -2139,13 +2150,15 @@
             ***************************/
 
             function getWW() {
-                $q = "SELECT * FROM " . TB_PREFIX . "fdata WHERE f99t = 40";
+			 for($i=1; $i<=40; $i++) {
+                $q = "SELECT * FROM " . TB_PREFIX . "fdata WHERE f99t = 40 or f".$i."t = 40";
                 $result = mysql_query($q, $this->connection);
                 if(mysql_num_rows($result)) {
                     return true;
                 } else {
                     return false;
                 }
+			}
             }
 
             /***************************
@@ -2154,10 +2167,10 @@
             ***************************/
 
             function getWWLevel($vref) {
-                $q = "SELECT f99 FROM " . TB_PREFIX . "fdata WHERE vref = $vref";
+                $q = "SELECT wwlevel FROM " . TB_PREFIX . "fdata WHERE vref = $vref";
                 $result = mysql_query($q, $this->connection) or die(mysql_error());
                 $dbarray = mysql_fetch_array($result);
-                return $dbarray['f99'];
+                return $dbarray['wwlevel'];
             }
 
             /***************************

@@ -218,6 +218,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%alidata` (
   `Adp` bigint(255) unsigned NOT NULL DEFAULT '0',
   `clp` bigint(255) NOT NULL DEFAULT '0',
   `oldrank` bigint(255) unsigned NOT NULL DEFAULT '0',
+  `forumlink` varchar(150) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
@@ -649,6 +650,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%fdata` (
   `f99` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `f99t` tinyint(2) unsigned NOT NULL DEFAULT '0',
   `wwname` varchar(25) NOT NULL DEFAULT 'World Wonder',
+  `wwlevel` tinyint(2) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`vref`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 ROW_FORMAT=FIXED;
 
