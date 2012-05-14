@@ -485,7 +485,7 @@ private function loyaltyRegeneration() {
             $database->query($q);
             $q = "UPDATE ".TB_PREFIX."odata set `crop` = `maxcrop` WHERE `crop` > `maxcrop`";
             $database->query($q);
-            $q = "UPDATE ".TB_PREFIX."odata set `crop` = 100 WHERE `crop` < 0";
+            $q = "UPDATE ".TB_PREFIX."odata set `crop` = 0 WHERE `crop` < 0";
             $database->query($q);
             $q = "UPDATE ".TB_PREFIX."odata set `wood` = 0 WHERE `wood` < 0";
             $database->query($q);
@@ -509,8 +509,6 @@ private function loyaltyRegeneration() {
             $q = "UPDATE ".TB_PREFIX."vdata set `iron` = `maxstore` WHERE `iron` > `maxstore`";
             $database->query($q);
             $q = "UPDATE ".TB_PREFIX."vdata set `crop` = `maxcrop` WHERE `crop` > `maxcrop`";
-            $database->query($q);
-            $q = "UPDATE ".TB_PREFIX."vdata set `crop` = 100 WHERE `crop` < 0";
             $database->query($q);
             $q = "UPDATE ".TB_PREFIX."vdata set `wood` = 0 WHERE `wood` < 0";
             $database->query($q);
@@ -2666,7 +2664,11 @@ $crannyimg = "<img src=\"gpack/travian_default/img/g/g23.gif\" height=\"30\" wid
                     if($trained >= $train['amt']) {
                         $trained = $train['amt'];
                     }
-                    $database->modifyUnit($train['vref'],array(($train['unit']>60?$train['unit']-60:$train['unit'])),array($trained),array(1));
+					if($train['unit']>60 && $train['unit']!=99){
+                    $database->modifyUnit($train['vref'],array($train['unit']-60),array($trained),array(1));
+					}else{
+					$database->modifyUnit($train['vref'],array($train['unit']),array($trained),array(1));
+					}
                     if($train['amt']-$trained <= 0) {
                         $database->trainUnit($train['id'],0,0,0,0,1,1);
                     }

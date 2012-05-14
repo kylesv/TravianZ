@@ -1424,7 +1424,7 @@
 
             function sendMessage($client, $owner, $topic, $message, $send) {
                 $time = time();
-                $q = "INSERT INTO " . TB_PREFIX . "mdata values (0,$client,$owner,'$topic',\"$message\",0,0,$send,$time)";
+                $q = "INSERT INTO " . TB_PREFIX . "mdata values (0,$client,$owner,'$topic',\"$message\",0,0,$send,$time,0,0)";
                 return mysql_query($q, $this->connection);
             }
 
@@ -1455,7 +1455,6 @@
                         $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE target = $id and send = 0 and archived = 0 ORDER BY time DESC";
                         break;
                     case 2:
-                        // removed send no longer needed as we dont send 2 messages any more just 1
                         $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE owner = $id ORDER BY time DESC";
                         break;
                     case 3:
@@ -1465,10 +1464,16 @@
                         $q = "UPDATE " . TB_PREFIX . "mdata set viewed = 1 where id = $id AND target = $session->uid";
                         break;
                     case 5:
-                        $q = "DELETE FROM " . TB_PREFIX . "mdata where id = $id";
+                        $q = "UPDATE " . TB_PREFIX . "mdata set deltarget = 1,viewed = 1 where id = $id";
                         break;
                     case 6:
                         $q = "SELECT * FROM " . TB_PREFIX . "mdata where target = $id and send = 0 and archived = 1";
+                        break;
+                    case 7:
+                        $q = "UPDATE " . TB_PREFIX . "mdata set delowner = 1 where id = $id";
+                        break;
+                    case 8:
+                        $q = "UPDATE " . TB_PREFIX . "mdata set deltarget = 1,delowner = 1,viewed = 1 where id = $id";
                         break;
                 }
                 if($mode <= 3 || $mode == 6) {
@@ -1479,6 +1484,23 @@
                 }
             }
 
+            function getDelSent($uid) {
+                $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE owner = $uid and delowner = 1 ORDER BY time DESC";
+                $result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
+            }
+
+            function getDelInbox($uid) {
+                $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE target = $uid and deltarget = 1 ORDER BY time DESC";
+                $result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
+            }
+			
+            function getDelArchive($uid) {
+                $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE target = $uid and archived = 1 and deltarget = 1 OR owner = $uid and archived = 1 and delowner = 1 ORDER BY time DESC";
+				return mysql_query($q, $this->connection);
+            }
+			
             function unarchiveNotice($id) {
                 $q = "UPDATE " . TB_PREFIX . "ndata set ntype = archive, archive = 0 where id = $id";
                 return mysql_query($q, $this->connection);
@@ -2000,10 +2022,11 @@
                     $stables = array(4, 5, 6, 15, 16, 23, 24, 25, 26, 35, 36, 45, 46);
                     $workshop = array(7, 8, 17, 18, 27, 28, 37, 38, 47, 48);
                     $residence = array(9, 10, 19, 20, 29, 30, 39, 40, 49, 50);
-     $greatstables = array(64,65,66,75,76,83,84,85,86,95,96,105,106,);
-     $greatbarracks = array(61,62,63,71,72,73,84,81,82,91,92,93,94,101,102,103,104,111,112,113,114);
-     $greatworkshop = array(67,68,77,78,87,88,97,98,107,108);
-     
+					$greatstables = array(64,65,66,75,76,83,84,85,86,95,96,105,106,);
+					$greatbarracks = array(61,62,63,71,72,73,84,81,82,91,92,93,94,101,102,103,104,111,112,113,114);
+					$greatworkshop = array(67,68,77,78,87,88,97,98,107,108);
+					$trapper = array(99);
+					
                     if(in_array($unit, $barracks)) {
                         $queued = $technology->getTrainingList(1);
                     } elseif(in_array($unit, $stables)) {
@@ -2013,12 +2036,14 @@
                     } elseif(in_array($unit, $residence)) {
                         $queued = $technology->getTrainingList(4);
                     } elseif(in_array($unit, $greatstables)) {
-            $queued = $technology->getTrainingList(6);
-           } elseif(in_array($unit, $greatbarracks)) {
-            $queued = $technology->getTrainingList(5);
-           } elseif(in_array($unit, $greatworkshop)) {
-            $queued = $technology->getTrainingList(7);
-           }
+						$queued = $technology->getTrainingList(6);
+					} elseif(in_array($unit, $greatbarracks)) {
+						$queued = $technology->getTrainingList(5);
+					} elseif(in_array($unit, $greatworkshop)) {
+						$queued = $technology->getTrainingList(7);
+					} elseif(in_array($unit, $trapper)) {
+						$queued = $technology->getTrainingList(8);
+					}
                     if(count($queued) > 0) {
                         $time = $queued[count($queued) - 1]['commence'] + $queued[count($queued) - 1]['eachtime'] * $queued[count($queued) - 1]['amt'];
                     }
