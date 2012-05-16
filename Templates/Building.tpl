@@ -34,6 +34,7 @@
         }
 		$BuildingList = array();
         foreach($building->buildArray as $jobs) {
+		if($jobs['master'] == 0){
         	echo "<tr><td class=\"ico\"><a href=\"?d=".$jobs['id']."&a=0&c=$session->checker\">";
             echo "<img src=\"img/x.gif\" class=\"del\" title=\"".CANCEL."\" alt=\"".CANCEL."\" /></a></td><td>";
 			echo $building->procResType($jobs['type']).$lang['buildings'][44].($village->resarray['f'.$jobs['field']]+(in_array($jobs['field'],$BuildingList)?2:1 )).")";
@@ -46,6 +47,11 @@
             echo "</span>&nbsp;".HRS."</td>";
             echo "<td>".DONE_AT."&nbsp;".date('H:i', $jobs['timestamp'])."</td></tr>";
             $timer +=1;
+		}else{
+        	echo "<tr><td class=\"ico\"><a href=\"?d=".$jobs['id']."&a=0&c=$session->checker\">";
+            echo "<img src=\"img/x.gif\" class=\"del\" title=\"cancel\" alt=\"cancel\" /></a></td><td>";
+			echo $building->procResType($jobs['type'])."<span class=\"none\"> (Level ".$jobs['level'].")</span>";
+			}
       	}
         ?>
             </tbody>
