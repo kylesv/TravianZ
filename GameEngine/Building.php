@@ -65,7 +65,9 @@ class Building {
 			return 10;
 		} else if($this->isMax($tid,$id,2) && $this->isLoop($id) && $this->isCurrent($id)) {
 			return 10;
-		} 
+		} else if($this->isMax($tid,$id,3) && $this->isLoop($id) && $this->isCurrent($id) && count($database->getMasterJobs($village->wid)) > 0) {
+			return 10;
+		}
 		else {
 			if($this->allocated <= $this->maxConcurrent) {
 				$resRequired = $this->resourceRequired($id,$village->resarray['f'.$id.'t']);
@@ -393,7 +395,7 @@ class Building {
 	}
 	
 	private function meetRequirement($id) {
-		global $village;
+		global $village,$database;
 		switch($id) {
 			case 1:
 			case 2:
@@ -492,8 +494,8 @@ class Building {
             if($this->getTypeLevel(15) >= 10 && $village->capital == 0) { return true; } else { return false; }
             break;  
 			case 40:
-			//need to check if have ww buildplan too
-            if($village->natar == 1) { return true; } else { return false; }
+			$wwbuildingplan = count($database->getOwnArtefactInfoByType2($village->wid,11));
+            if($village->natar == 1 && $wwbuildingplan > 0) { return true; } else { return false; }
 			break;
 			case 41:
 			if($this->getTypeLevel(16) >= 10 && $this->getTypeLevel(20) == 20) { return true; } else { return false; }
@@ -627,8 +629,7 @@ class Building {
 	
 	private function finishAll() {
 		global $database,$session,$logging,$village,$bid18,$bid10,$bid11,$technology,$_SESSION;
-		if($session->access!=BANNED){
-		if($session->gold >= 2){
+		if($session->access!=BANNED){		
 		foreach($this->buildArray as $jobs) {
 		if($jobs['wid']==$village->wid){
 		$wwvillage = $database->getResourceLevel($jobs['wid']);
@@ -636,9 +637,7 @@ class Building {
 		$level = $database->getFieldLevel($jobs['wid'],$jobs['field']);
 			$level = ($level == -1) ? 0 : $level;
 			if($jobs['type'] != 25 AND $jobs['type'] != 26 AND $jobs['type'] != 40) {
-			$gold=$database->getUserField($_SESSION['username'],'gold','username');
-			$gold-=2;
-			$database->updateUserField($_SESSION['username'],'gold',$gold,0);
+			$finish = 1;
 				$resource = $this->resourceRequired($jobs['field'],$jobs['type']);
 				$q = "UPDATE ".TB_PREFIX."fdata set f".$jobs['field']." = f".$jobs['field']." + 1, f".$jobs['field']."t = ".$jobs['type']." where vref = ".$jobs['wid'];
 			  	if($database->query($q)) {
@@ -689,7 +688,7 @@ class Building {
 		}
 		$technology->finishTech();
 		$logging->goldFinLog($village->wid);
-		$database->modifyGold($session->uid,0,0);
+		$database->modifyGold($session->uid,2,0);
 		$stillbuildingarray = $database->getJobs($village->wid);
 		if(count($stillbuildingarray) == 1) {
 			if($stillbuildingarray[0]['loopcon'] == 1) {
@@ -698,7 +697,6 @@ class Building {
 			}
 		}
 		header("Location: ".$session->referrer);
-		}
 		}else{
 		header("Location: banned.php");
 		}

@@ -748,6 +748,25 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%forum_topic` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `%prefix%general`
+--
+
+CREATE TABLE IF NOT EXISTS `%PREFIX%general` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `casualties` int(10) unsigned NOT NULL,
+  `time` int(10) unsigned NOT NULL,
+  `shown` tinyint(1) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+--
+-- Dumping data for table `%prefix%general`
+--
+
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `%prefix%gold_fin_log`
 --
 
@@ -1340,6 +1359,7 @@ CREATE TABLE IF NOT EXISTS `%PREFIX%vdata` (
 `exp3` int(10) NOT NULL,
 `created` int(11) NOT NULL,
 `natar` tinyint(1) unsigned NOT NULL,
+`starv` int(10) unsigned NOT NULL,
 PRIMARY KEY (`wref`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
 

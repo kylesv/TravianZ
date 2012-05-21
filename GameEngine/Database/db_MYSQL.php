@@ -21,7 +21,7 @@
             function register($username, $password, $email, $tribe, $locate, $act) {
                 $time = time();
                 $timep = (time() + PROTECTION);
-                $q = "INSERT INTO " . TB_PREFIX . "users (username,password,access,email,timestamp,tribe,location,act,protect,regtime) VALUES ('$username', '$password', " . USER . ", '$email', $time, $tribe, $locate, '$act', $timep, $time)";
+                $q = "INSERT INTO " . TB_PREFIX . "users (username,password,access,email,timestamp,tribe,location,act,protect,lastupdate,regtime) VALUES ('$username', '$password', " . USER . ", '$email', $time, $tribe, $locate, '$act', $timep, $time, $time)";
                 if(mysql_query($q, $this->connection)) {
                     return mysql_insert_id($this->connection);
                 } else {
@@ -137,6 +137,26 @@
                 $result = mysql_query($q, $this->connection) or die(mysql_error());
                 $dbarray = mysql_fetch_array($result);
                 return $dbarray[$field];
+            }
+
+            function getVrefField($ref, $field){
+                    $q = "SELECT $field FROM " . TB_PREFIX . "vdata where wref = '$ref'";
+                    $result = mysql_query($q, $this->connection) or die(mysql_error());
+                    $dbarray = mysql_fetch_array($result);
+                    return $dbarray[$field];
+            }
+
+            function getVrefCapital($ref){
+                $q = "SELECT * FROM " . TB_PREFIX . "vdata where owner = '$ref' and capital = 1";
+                $result = mysql_query($q, $this->connection) or die(mysql_error());
+                $dbarray = mysql_fetch_array($result);
+                return $dbarray;
+            }
+
+			function getStarvation(){
+                    $q = "SELECT * FROM " . TB_PREFIX . "vdata where starv != 0";
+                    $result = mysql_query($q, $this->connection);
+                    return $this->mysql_fetch_all($result);
             }
 
             function getActivateField($ref, $field, $mode) {
@@ -1475,8 +1495,17 @@
                     case 8:
                         $q = "UPDATE " . TB_PREFIX . "mdata set deltarget = 1,delowner = 1,viewed = 1 where id = $id";
                         break;
+                    case 9:
+                        $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE target = $id and send = 0 and archived = 0 and deltarget = 0 ORDER BY time DESC";
+                        break;
+                    case 10:
+                        $q = "SELECT * FROM " . TB_PREFIX . "mdata WHERE owner = $id and delowner = 0 ORDER BY time DESC";
+                        break;
+                    case 11:
+                        $q = "SELECT * FROM " . TB_PREFIX . "mdata where target = $id and send = 0 and archived = 1 and deltarget = 0";
+                        break;
                 }
-                if($mode <= 3 || $mode == 6) {
+                if($mode <= 3 || $mode == 6 || $mode > 8) {
                     $result = mysql_query($q, $this->connection);
                     return $this->mysql_fetch_all($result);
                 } else {
@@ -1531,13 +1560,7 @@
             }
 
             function getNotice($uid) {
-                $q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid ORDER BY time DESC";
-                $result = mysql_query($q, $this->connection);
-                return $this->mysql_fetch_all($result);
-            }
-			
-            function getDelNotice($uid) {
-                $q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid and del = 1 ORDER BY time DESC";
+                $q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid and del = 0 ORDER BY time DESC";
                 $result = mysql_query($q, $this->connection);
                 return $this->mysql_fetch_all($result);
             }
@@ -1547,6 +1570,12 @@
                 $result = mysql_query($q, $this->connection);
                 $dbarray = mysql_fetch_array($result);
                 return $dbarray[$field];
+            }
+			
+            function getNotice3($uid) {
+                $q = "SELECT * FROM " . TB_PREFIX . "ndata where uid = $uid ORDER BY time DESC";
+                $result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
             }
 
             function addBuilding($wid, $field, $type, $loop, $time, $master, $level) {
@@ -1584,9 +1613,27 @@
 				if(count($jobs) > 2 && ($jobs[0]['field'] == ($jobs[1]['field'] == $jobs[2]['field']))) {
                     $SameBuildCount = 4;
                 }
-
+				if(count($jobs) > 3 && ($jobs[0]['field'] == ($jobs[1]['field'] == $jobs[3]['field']))) {
+                    $SameBuildCount = 5;
+                }
+				if(count($jobs) > 3 && ($jobs[0]['field'] == ($jobs[2]['field'] == $jobs[3]['field']))) {
+                    $SameBuildCount = 6;
+                }
+				if(count($jobs) > 3 && ($jobs[1]['field'] == ($jobs[2]['field'] == $jobs[3]['field']))) {
+                    $SameBuildCount = 7;
+                }
+				if(count($jobs) > 3 && ($jobs[0]['field'] == $jobs[3]['field'])) {
+                    $SameBuildCount = 8;
+                }
+                if(count($jobs) > 3 && ($jobs[1]['field'] == $jobs[3]['field'])) {
+                    $SameBuildCount = 9;
+                }
+                if(count($jobs) > 3 && ($jobs[2]['field'] == $jobs[3]['field'])) {
+                    $SameBuildCount = 10;
+                }
                 if($SameBuildCount > 0) {
-					if($SameBuildCount == 4){
+					if($SameBuildCount > 3){
+					if($SameBuildCount == 4 or $SameBuildCount == 5){
 					if($jobDeleted == 0){
 					$uprequire = $building->resourceRequired($jobs[1]['field'],$jobs[1]['type'],1);
 					$time = $uprequire['time'];
@@ -1594,11 +1641,36 @@
 					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[1]['id']."";
                         mysql_query($q, $this->connection);
 					}
+					}else if($SameBuildCount == 6){
+					if($jobDeleted == 0){
+					$uprequire = $building->resourceRequired($jobs[2]['field'],$jobs[2]['type'],1);
+					$time = $uprequire['time'];
+					$timestamp = $time+time();
+					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[2]['id']."";
+                        mysql_query($q, $this->connection);
+					}
+					}else if($SameBuildCount == 7){
+					if($jobDeleted == 1){
+					$uprequire = $building->resourceRequired($jobs[2]['field'],$jobs[2]['type'],1);
+					$time = $uprequire['time'];
+					$timestamp = $time+time();
+					$q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=".$timestamp." WHERE id=".$jobs[2]['id']."";
+                        mysql_query($q, $this->connection);
+					}
+					}
+					if($SameBuildCount < 8){
 					$uprequire1 = $building->resourceRequired($jobs[$jobMaster]['field'],$jobs[$jobMaster]['type'],2);
 					$time1 = $uprequire1['time'];
 					$timestamp1 = $time1;
 					$q1 = "UPDATE " . TB_PREFIX . "bdata SET level=level-1,timestamp=".$timestamp1." WHERE id=".$jobs[$jobMaster]['id']."";
                         mysql_query($q1, $this->connection);
+					}else{
+					$uprequire1 = $building->resourceRequired($jobs[$jobMaster]['field'],$jobs[$jobMaster]['type'],1);
+					$time1 = $uprequire1['time'];
+					$timestamp1 = $time1;
+					$q1 = "UPDATE " . TB_PREFIX . "bdata SET level=level-1,timestamp=".$timestamp1." WHERE id=".$jobs[$jobMaster]['id']."";
+                        mysql_query($q1, $this->connection);
+					}
 					}else if($d == $jobs[floor($SameBuildCount / 3)]['id'] || $d == $jobs[floor($SameBuildCount / 2) + 1]['id']) {
                         $q = "UPDATE " . TB_PREFIX . "bdata SET loopcon=0,level=level-1,timestamp=" . $jobs[floor($SameBuildCount / 3)]['timestamp'] . " WHERE master = 0 AND id > ".$d." and (ID=" . $jobs[floor($SameBuildCount / 3)]['id'] . " OR ID=" . $jobs[floor($SameBuildCount / 2) + 1]['id'] . ")";
                         mysql_query($q, $this->connection);
@@ -1956,6 +2028,12 @@
                 $result = mysql_query($q, $this->connection);
                 return $this->mysql_fetch_all($result);
 			}
+
+			function getUserByAlliance($aid){
+			    $q = "SELECT * FROM " . TB_PREFIX . "users where alliance = $aid";
+                $result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
+			}
 			
             function getHeroRanking() {
                 $q = "SELECT * FROM " . TB_PREFIX . "hero WHERE dead = 0";
@@ -2013,6 +2091,17 @@
                     $q = "UPDATE `".TB_PREFIX."hero` SET $column = $column + $value WHERE heroid = $heroid";
                 } else {
                     $q = "UPDATE `".TB_PREFIX."hero` SET $column = $column - $value WHERE heroid = $heroid";
+                }
+                return mysql_query($q, $this->connection);
+            }
+			
+            function modifyHeroByOwner($column,$value,$uid,$mode=0) {
+                if(!$mode) {
+                    $q = "UPDATE `".TB_PREFIX."hero` SET $column = $value WHERE uid = $uid";
+                } elseif($mode=1) {
+                    $q = "UPDATE `".TB_PREFIX."hero` SET $column = $column + $value WHERE uid = $uid";
+                } else {
+                    $q = "UPDATE `".TB_PREFIX."hero` SET $column = $column - $value WHERE uid = $uid";
                 }
                 return mysql_query($q, $this->connection);
             }
@@ -2569,11 +2658,19 @@
                 $result = mysql_query($q, $this->connection);
                 return mysql_fetch_array($result);
             }
+
             function getOwnArtefactInfoByType($vref, $type) {
                 $q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref AND type = $type";
                 $result = mysql_query($q, $this->connection);
                 return mysql_fetch_array($result);
             }
+
+            function getOwnArtefactInfoByType2($vref, $type) {
+                $q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE vref = $vref AND type = $type";
+				$result = mysql_query($q, $this->connection);
+                return $this->mysql_fetch_all($result);
+            }
+
             function getOwnUniqueArtefactInfo($id, $type, $size) {
                 $q = "SELECT * FROM " . TB_PREFIX . "artefacts WHERE owner = $id AND type = $type AND size=$size";
                 $result = mysql_query($q, $this->connection);
@@ -2711,19 +2808,16 @@
             }
             
             function editSlotFarm($eid, $lid, $wref, $x, $y, $dist, $t1, $t2, $t3, $t4, $t5, $t6, $t7, $t8, $t9, $t10) {
-                
                 $q = "UPDATE " . TB_PREFIX . "raidlist set lid = '$lid', towref = '$wref', x = '$x', y = '$y', t1 = '$t1', t2 = '$t2', t3 = '$t3', t4 = '$t4', t5 = '$t5', t6 = '$t6', t7 = '$t7', t8 = '$t8', t9 = '$t9', t10 = '$t10' WHERE id = $eid";
                 return mysql_query($q, $this->connection);
-
             }
             
-        function getArrayMemberVillage($uid){
-
-        $q = 'SELECT a.wref, a.name, b.x, b.y from '.TB_PREFIX.'vdata AS a left join '.TB_PREFIX.'wdata AS b ON b.id = a.wref where owner = '.$uid.' order by capital DESC,pop DESC';
-        $result = mysql_query($q, $this->connection);
-        $array = $this->mysql_fetch_all($result);
-        return $array;
-        }
+			function getArrayMemberVillage($uid){
+				$q = 'SELECT a.wref, a.name, b.x, b.y from '.TB_PREFIX.'vdata AS a left join '.TB_PREFIX.'wdata AS b ON b.id = a.wref where owner = '.$uid.' order by capital DESC,pop DESC';
+				$result = mysql_query($q, $this->connection);
+				$array = $this->mysql_fetch_all($result);
+				return $array;
+			}
 
             function addPassword($uid, $npw, $cpw){
                 $q = "REPLACE INTO `" . TB_PREFIX . "password`(uid, npw, cpw) VALUES ($uid, '$npw', '$cpw')";
@@ -2743,6 +2837,108 @@
                 }
 
                 return false;
+            }
+
+            function getCropProdstarv($wref) {
+			global $bid4,$bid8,$bid9,$sesion,$technology;
+
+				$basecrop = $grainmill = $bakery = 0;
+                $owner = $this->getVrefField($wref, 'owner');
+                $bonus = $this->getUserField($owner, b4, 0);  
+
+                $buildarray = $this->getResourceLevel($wref);
+				$cropholder = array();
+				for($i=1;$i<=38;$i++) {
+                    if($buildarray['f'.$i.'t'] == 4) {
+                        array_push($cropholder,'f'.$i);
+                    }
+                    if($buildarray['f'.$i.'t'] == 8) {
+                        $grainmill = $buildarray['f'.$i];
+                    }
+                    if($buildarray['f'.$i.'t'] == 9) {
+                        $bakery = $buildarray['f'.$i];
+                    }
+				}
+                $q = "SELECT type FROM `" . TB_PREFIX . "odata` WHERE conqured = $wref";
+                $result = mysql_query($q, $this->connection) or die(mysql_error());
+                $oasis = mysql_fetch_array($result);
+				foreach($oasis as $oa){
+                    switch($oa['type']) {
+                        case 1:
+                        case 2:
+                        $wood += 1;
+                        break;
+                        case 3:
+                        $wood += 1;
+                        $cropo += 1;
+                        break;
+                        case 4:
+                        case 5:
+                        $clay += 1;
+                        break;
+                        case 6:
+                        $clay += 1;
+                        $cropo += 1;
+                        break;
+                        case 7:
+                        case 8:
+                        $iron += 1;
+                        break;
+                        case 9:
+                        $iron += 1;
+                        $cropo += 1;
+                        break;
+                        case 10:
+                        case 11:
+                        $cropo += 1;
+                        break;
+                        case 12:
+                        $cropo += 2;
+                        break;
+                    }
+				}
+				for($i=0;$i<=count($cropholder)-1;$i++) { $basecrop+= $bid4[$buildarray[$cropholder[$i]]]['prod']; }
+				$crop = $basecrop + $basecrop * 0.25 * $cropo;
+				if($grainmill >= 1 || $bakery >= 1) {
+                    $crop += $basecrop /100 * ($bid8[$grainmill]['attri'] + $bid9[$bakery]['attri']);
+				}
+				if($bonus > time()) {
+                    $crop *= 1.25;
+				}
+				$crop *= SPEED;
+				return $crop;
+            }
+			
+			//general statistics
+			
+            function addGeneralAttack($casualties) {
+                $time = time();
+                $q = "INSERT INTO " . TB_PREFIX . "general values (0,'$casualties','$time',1)";
+                return mysql_query($q, $this->connection) or die(mysql_error());
+            }
+			
+            function getAttackByDate($time) {
+                $q = "SELECT * FROM " . TB_PREFIX . "general where shown = 1";
+                $result = $this->query_return($q);
+				$attack = 0;
+				foreach($result as $general){
+				if(date("j. M",$time) == date("j. M",$general['time'])){
+				$attack += 1;
+				}
+				}
+				return $attack;
+            }
+
+            function getAttackCasualties($time) {
+                $q = "SELECT * FROM " . TB_PREFIX . "general where shown = 1";
+                $result = $this->query_return($q);
+				$casualties = 0;
+				foreach($result as $general){
+				if(date("j. M",$time) == date("j. M",$general['time'])){
+				$casualties += $general['casualties'];
+				}
+				}
+				return $casualties;
             }
         }
         ;
